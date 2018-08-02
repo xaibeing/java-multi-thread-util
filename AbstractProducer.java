@@ -1,10 +1,5 @@
 package com.util.thread.producer_consumer;
 
-import java.util.concurrent.ThreadLocalRandom;
-
-import static com.util.thread.producer_consumer.test.Test.productAvailableLock;
-import static com.util.thread.producer_consumer.test.Test.storageAvailableLock;
-
 public abstract class AbstractProducer implements Runnable {
 
     public AbstractProducer(IProductMgr iProductMgr, Object objLock) {
@@ -16,22 +11,31 @@ public abstract class AbstractProducer implements Runnable {
 
     private Object objLock;
 
-    private boolean bEnd = false;
+    private volatile boolean bEnd = false;
 
     public void endWork() {
         bEnd = true;
+        System.out.println("    Producer bEnd = true");
     }
 
     @Override
     public void run() {
+
         System.out.println("Producer running");
+
         while (!bEnd) {
             synchronized (objLock) {
                 // Wait until Storage is available.
                 while (!iProductMgr.isStorageAvailable()) {
                     try {
-//                        objLock.wait();
-                        storageAvailableLock.wait();
+                        System.out.println("    Producer waiting ......");
+                        objLock.wait();
+                        System.out.println("    Producer wakeup");
+
+                        if (bEnd) {
+                            System.out.println("Producer Done");
+                            return;
+                        }
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -44,8 +48,7 @@ public abstract class AbstractProducer implements Runnable {
                 iProductMgr.putProduct(objProduct);
 
                 // Notify producer that status has changed.
-//                objLock.notifyAll();
-                productAvailableLock.notifyAll();
+                objLock.notifyAll();
             }
 
 //            // for test only
@@ -55,6 +58,7 @@ public abstract class AbstractProducer implements Runnable {
 //                e.printStackTrace();
 //            }
         }
+
         System.out.println("Producer Done");
     }
 

@@ -5,9 +5,6 @@ import com.util.thread.producer_consumer.Lock;
 
 public class Test {
 
-    public static final Lock productAvailableLock = new Lock();
-    public static final Lock storageAvailableLock = new Lock();
-
     public static void main(String[] args) {
 
         final Lock lock = new Lock();
@@ -19,16 +16,19 @@ public class Test {
         new Thread(msgConsumer).start();
 
         try {
-            Thread.sleep(20*1000);
+            Thread.sleep(10 * 1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
+        System.out.println("main() ending threads");
         msgProducer.endWork();
         msgConsumer.endWork();
 
         synchronized (lock) {
+            System.out.println("main() notifyAll 1");
             lock.notifyAll();
+            System.out.println("main() notifyAll 2");
         }
 
         System.out.println("main() Done");
